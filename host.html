@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Party all-in-one</title>
+    <style>
+
+        /*Selector de fuente*/
+        @font-face {
+            font-family: 'HappyTreeFriends';
+            src: url('./fonts/HappyTreeFriends-GO86g.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            --font-ui-xs: 14px;
+            --font-ui-sm: 16px;
+            --font-ui-md: 20px;
+            --font-ui-lg: 28px;
+            --font-ui-xl: 40px;
+            --font-ui-xxl: 78px;
+        }   
+
+        * { box-sizing: border-box; }
+    
+        body {
+            background: #263238;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            height: 100vh;
+            margin: 0;
+            font-family: 'HappyTreeFriends', sans-serif;
+        }
+    
+        /* ---- PANTALLA DE BIENVENIDA ---- */
+        /* ---- PANTALLA DE BIENVENIDA ---- */
+#pantalla-bienvenida {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 9999; /* Lo subimos al máximo para que tape todo el lobby */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#bienvenida-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;  
+    object-fit: contain; /* Cambia a 'contain' si prefieres que se vea toda la imagen con bordes */
+    object-position: center;
+    z-index: 1; /* Nivel 1: El fondo de pantalla */
+    filter: brightness(1.1);
+}
+
+#bienvenida-capa {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.55) 0%,
+        rgba(0,0,0,0.18) 24%,
+        rgba(0,0,0,0.08) 55%,
+        rgba(0,0,0,0.18) 100%
+    );
+    z-index: 2; /* Nivel 2: El sombreado va encima del fondo */
+    pointer-events: none;
+}
+
+#bienvenida-texto {
+    position: absolute;
+    left: 50%;
+    bottom: 7%;
+    transform: translateX(-50%);
+    z-index: 10; /* Nivel 10: El texto flota sobre todo lo demás */
+    
+    /* El resto de tus estilos del texto se mantienen igual */
+    color: #f3db55;
+    font-size: clamp(80px, 2.3vw, 80px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+    text-shadow:
+        0 0 5px rgba(255,255,255,0.95),
+        0 0 12px rgba(255,255,255,0.9),
+        0 0 24px rgba(255,255,255,0.8),
+        0 0 42px rgba(255,255,255,0.55);
+    animation: bienvenidaBlink 1s ease-in-out infinite;
+}
+        @keyframes bienvenidaBlink {
+            0%, 100% {
+                opacity: 1;
+                filter: brightness(1);
+                text-shadow:
+                0 0 5px rgba(255,255,255,0.95),
+                0 0 10px rgba(255,255,255,0.9),
+                0 0 18px rgba(255,255,255,0.8),
+                0 0 32px rgba(255,255,255,0.55);
+            }
+            50% {
+                opacity: 0.3;
+                filter: brightness(1.4);
+                text-shadow:
+                0 0 8px rgba(255,255,255,1),
+                0 0 16px rgba(255,255,255,1),
+                0 0 26px rgba(255,255,255,0.95),
+                0 0 42px rgba(255,255,255,0.8);
+            }
+        }
+    
+        #pantalla-inicio {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: url("img/lobby_bg.png") center center / contain no-repeat;
+        }
+
+        #campo-de-juego {
+            display: none; 
+            width: 950px; height: 700px; position: relative;
+            background: url('/img/fondo.png') center center / cover repeat;
+            border: 5px solid #90caf9; border-radius: 15px; overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 0 30px rgba(100,200,255,0.4);
+        }
+
+        #titulo-lobby {
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(760px, 78vw);
+            height: auto;
+            z-index: 15;
+            pointer-events: none;
+            filter: drop-shadow(0 0 18px rgba(255, 70, 200, 0.45));
+        }
+
+        /* ===== LAYOUT GENERAL ===== */
+        #lobby-layout {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 1520px;
+            padding: 28px 52px 18px;
+        }
+
+        #lobby-left, #lobby-right {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 22px;
+            min-width: 260px;
+            max-width: 260px;
+            flex-shrink: 0;
+            padding-top: 120px;
+            position: relative;
+            align-items: center;
+        }
+
+        #lobby-left { left: -40px; top: -80px; }
+        #lobby-right { left: 40px; top: -140px; }
+
+        /* ===== TARJETAS LATERALES ===== */
+        .lobby-card {
+            background: linear-gradient(180deg, rgba(12,16,34,0.9), rgba(8,10,22,0.82));
+            border: 2px solid rgba(255, 90, 240, 0.72);
+            border-radius: 18px;
+            padding: 16px 18px;
+            box-shadow:
+                0 0 18px rgba(255, 60, 210, 0.22),
+                inset 0 0 18px rgba(0,0,0,0.24);
+            backdrop-filter: blur(6px);
+        }
+
+        #lobby-qr-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        #lobby-players-card { min-height: 110px; }
+
+        #lobby-qr-title, #lobby-players-title {
+            font-size: 24px; font-weight: 900; letter-spacing: 2px;
+            text-transform: uppercase; margin: 0 0 10px;
+        }
+
+        #lobby-qr-title { color: #ff59ef; text-shadow: 0 0 10px rgba(255,89,239,0.55); }
+        #lobby-players-title {
+            color: #2fe6ff; text-shadow: 0 0 8px rgba(47,230,255,0.55);
+            margin-top: 20px !important; 
+        }
+
+        .fila-jugador {
+            font-size: 26px !important; font-weight: 800 !important; color: #ffffff !important;
+            padding: 12px 20px !important; margin-bottom: 10px !important;
+            background: rgba(255, 255, 255, 0.15) !important; border-radius: 12px;
+            display: flex; align-items: center; border: 1px solid rgba(255, 255, 255, 0.1);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* ===== CENTRO ===== */
+        #lobby-center {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; gap: 8px; transform: translate(-90px, 150px);
+        }
+
+        #game-selector {
+            display: grid; grid-template-columns: 92px 1fr 92px; align-items: center;
+            gap: 24px; width: 100%; max-width: 760px;
+        }
+
+        /* FLECHAS */
+        #btn-prev-game, #btn-next-game {
+            width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;
+            align-self: center; background: transparent !important; border: none !important;
+            box-shadow: none !important; outline: none; padding: 0;
+            appearance: none !important; -webkit-appearance: none !important;
+        }
+
+        #btn-prev-game img, #btn-next-game img {
+            width: 150px; height: auto; display: block; background: transparent !important;
+            mix-blend-mode: normal;
+            filter: drop-shadow(0 0 8px rgba(255, 60, 60, 0.28)) drop-shadow(0 0 14px rgba(255, 60, 60, 0.16));
+            transition: transform 0.16s ease, filter 0.16s ease;
+        }
+
+        #btn-prev-game:hover img, #btn-next-game:hover img {
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 10px rgba(255, 90, 90, 0.55)) drop-shadow(0 0 20px rgba(255, 60, 60, 0.38));
+        }
+        #btn-prev-game:active img, #btn-next-game:active img { transform: scale(0.95); }
+
+        /* ===== LIBRO HERO ===== */
+        #cartridge-display {
+            width: 650px; height: 488px; position: relative; display: flex;
+            align-items: center; justify-content: center; overflow: visible;
+            flex-shrink: 0; cursor: pointer; animation: book-float 3.8s ease-in-out infinite;
+        }
+
+        #cartridge-img {
+            width: 650px; height: 488px; object-fit: contain; display: block;
+            filter: drop-shadow(0 0 18px rgba(255, 226, 120, 0.70)) drop-shadow(0 0 42px rgba(255, 196, 70, 0.68))
+                    drop-shadow(0 0 78px rgba(255, 170, 35, 0.52)) drop-shadow(0 18px 22px rgba(0,0,0,0.24));
+            transition: filter 0.28s ease;
+        }
+
+        #cartridge-display:hover #cartridge-img {
+            filter: drop-shadow(0 0 22px rgba(255, 232, 145, 0.90)) drop-shadow(0 0 52px rgba(255, 196, 70, 0.100))
+                    drop-shadow(0 0 110px rgba(255, 170, 35, 0.120)) drop-shadow(0 18px 22px rgba(0,0,0,0.150));
+        }
+
+        @keyframes book-float { 0%,100%{ transform: translateY(0px); } 50%{ transform: translateY(-10px); } }
+
+        /* ===== NOMBRE DEL MINIJUEGO ===== */
+        #game-name {
+            display: block; margin-top: 34px; margin-bottom: 26px; position: relative;
+            left: 80px; top: -90px; padding: 14px 28px; border-radius: 18px;
+            background: transparent; color: #000000; font-size: 64px; font-weight: 1000;
+            line-height: 1; letter-spacing: 0.4px; box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+            text-align: center;
+            text-shadow:
+                -1px -1px 0 rgba(255,255,255,0.95),
+                 1px -1px 0 rgba(255,255,255,0.95),
+                -1px  1px 0 rgba(255,255,255,0.95),
+                 1px  1px 0 rgba(255,255,255,0.95),
+                 0 0 10px rgba(255,255,255,0.95),
+                 0 0 24px rgba(255,255,255,0.85),
+                 0 0 44px rgba(255,255,255,0.72),
+                 0 0 72px rgba(255,255,255,0.58); /* ¡Aquí faltaba el punto y coma! */
+        }
+
+        /* ===== BOTÓN INICIAR ===== */
+        #btn-iniciar {
+            background: none; border: none; padding: 0; margin-top: -2px; cursor: pointer; display: block;
+            transition: transform 0.14s ease, filter 0.14s ease; position: relative; left: 60px; top: -100px;
+        }
+
+        #btn-iniciar img {
+            width: 350px; height: auto; display: block; filter: drop-shadow(0 8px 14px rgba(255,120,180,0.22));
+        }
+        #btn-iniciar:hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.05); }
+        #btn-iniciar:active { transform: scale(0.97); }
+
+        /* ── TRANSITION OVERLAY ─────────────────────── */
+        #overlay-flash {
+            position: fixed; inset: 0; background: black; z-index: 900; opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease-in;
+        }
+        #letsgo-sign {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.4); z-index: 901; display: none;
+            image-rendering: pixelated;
+        }
+        #letsgo-sign img { width: 680px; height: auto; display: block; image-rendering: pixelated; }
+        #letsgo-sign.visible { display: block; animation: letsgo-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        @keyframes letsgo-pop {
+            from { transform: translate(-50%,-50%) scale(0.4); opacity: 0; }
+            to   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+        }
+
+        /* Lobby characters layer */
+        #lobby-personajes {
+            position: absolute; top: 0; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;
+        }
+        /* host.html - REEMPLAZA O AGREGA ESTO */
+        .lobby-jugador-wrap {
+        position: absolute !important; /* El !important obliga al navegador a obedecer */
+        top: 0;
+        left: 0;
+        width: 200px; 
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end; /* Alinea al gato al fondo de su propio cuadro */
+        transition: none !important; /* Evita que el movimiento se vea lento o lagueado */
+        }
+        .lobby-etiqueta {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); z-index: 120; 
+            background: rgba(0, 0, 0, 0.85); color: #fff; padding: 8px 18px; border-radius: 10px; 
+            font-size: 22px; font-weight: 800; letter-spacing: 1px; white-space: nowrap;
+            border: 3px solid rgba(255, 255, 255, 0.7); text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+        }
+
+        /* ===== CONTROLES DE VOLUMEN ===== */
+        .vol-ctrl { display: flex; align-items: center; justify-content: center; gap: 15px; width: 100%; max-width: 220px; margin: 0 auto; image-rendering: pixelated; }
+        .px-btn { background: transparent !important; border: none !important; padding: 0; margin: 0; cursor: pointer; outline: none; box-shadow: none !important; opacity: 0.5; transition: opacity 0.2s ease, filter 0.2s ease, transform 0.1s ease; }
+        .px-btn:hover { opacity: 1; transform: scale(1.1); }
+        #btn-vol-on:hover { filter: drop-shadow(0 0 5px rgba(47, 230, 255, 0.8)) drop-shadow(0 0 10px rgba(47, 230, 255, 0.5)); }
+        #btn-vol-off:hover { filter: drop-shadow(0 0 5px rgba(255, 89, 239, 0.8)) drop-shadow(0 0 10px rgba(255, 89, 239, 0.5)); }
+        #vol-slider-lobby { -webkit-appearance: none; appearance: none; height: 5px; border-radius: 3px; background: #80cbc4; outline: none; cursor: pointer; flex: 1; }
+
+        /* Estilo unificado para personajes en el lobby */
+        .lobby-sprite, .lobby-sprite.hada-sprite, .lobby-sprite.samurai-sprite, .lobby-sprite.mecanico-sprite {
+            width: 250px !important; height: 250px !important; background-size: contain !important;
+            background-repeat: no-repeat; background-position: bottom center; image-rendering: auto; 
+            transform: scaleX(var(--flip, 1)); transition: transform 0.15s ease-out;
+        }
+
+        @keyframes caminar { 0%,100% { transform: translateY(0) scaleX(var(--flip,1)); } 25%,75% { transform: translateY(-4px) scaleX(var(--flip,1)); } }
+        @keyframes idle { 0%,100% { transform: translateY(0) scaleX(var(--flip,1)); } 50% { transform: translateY(-2px) scaleX(var(--flip,1)); } }
+        .sprite-personaje.caminando { animation: caminar 0.35s steps(1) infinite; }
+        .sprite-personaje.idle      { animation: idle 1.5s ease-in-out infinite; }
+
+        /* Animaciones extra... (Mantuve todas tus animaciones igual) */
+        @keyframes patinar { 0%,100% { transform: skewX(calc(var(--flip,1)*-18deg)) scaleX(var(--flip,1)) scaleY(0.88); } 50% { transform: skewX(calc(var(--flip,1)*-10deg)) scaleX(var(--flip,1)) scaleY(0.93); } }
+        .sprite-personaje.patinando { animation: patinar 0.15s ease-in-out infinite; filter: drop-shadow(0 0 8px #00e5ff); }
+    </style>
+</head>
+<body>
+
+    <div id="overlay-flash"></div>
+    <div id="letsgo-sign"><img src="/img/letsgo.png" alt="LET'S GO!"></div>
+
+    <div id="pantalla-bienvenida">
+        <img src="img/super-party-intro.png" alt="intro" id="bienvenida-bg">
+        <div id="bienvenida-capa"></div>
+        <div id="bienvenida-texto">Presiona cualquier botón</div>
+    </div>
+
+    <div id="pantalla-inicio">
+        <div id="lobby-personajes"></div>
+        <img src="img/super_party_logo.png" alt="Super Party all-in-one" id="titulo-lobby">
+        
+        <div id="lobby-layout">
+            <div id="lobby-left">
+                <div id="lobby-qr-card" class="lobby-card">
+                    <p id="lobby-qr-title">Escanea para jugar</p>
+                    <div id="qr-inicio" class="qr-box" title="QR para unirse con el móvil"></div>
+                    <p id="qr-inicio-url"></p>
+                    <div id="lobby-btn-grid" class="vol-ctrl">
+                        <button id="btn-vol-off" class="px-btn"><img src="img/btn_vol_off.png" width="52" alt=""></button>
+                        <button id="btn-vol-on" class="px-btn"><img src="img/btn_vol_on.png" width="52" alt=""></button>
+                    </div>
+                    <input id="vol-slider-lobby" type="range" min="0" max="1" step="0.05" value="0.5">
+                </div>
+            </div>
+
+            <div id="lobby-center">
+                <div id="game-selector">
+                    <button id="btn-prev-game" class="px-btn"><img src="img/btn_prev.png" alt=""></button>
+                    <div id="cartridge-display"><img id="cartridge-img" src="" alt="Juego"></div>
+                    <button id="btn-next-game" class="px-btn"><img src="img/btn_next.png" alt=""></button>
+                </div>
+                <div id="game-name"></div>
+                <button id="btn-iniciar"><img src="img/btn_iniciar.png" alt="INICIAR JUEGO"></button>
+            </div>
+
+            <div id="lobby-right">
+                <div id="lobby-players-card" class="lobby-card">
+                    <p id="lobby-players-title">Jugadores conectados:</p>
+                    <div id="lobby-lista-jugadores"></div>
+                </div>
+            </div>
+        </div> </div> <div id="contenedor-pista-hielo" style="display: none; position: fixed; inset: 0; z-index: 500;">
+        </div>
+        </div>
+    
+   
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/vendor/qrcode.min.js"></script>
+    <script type="module">
+        
+        
+        // CHIVATO DE CONSOLA: Si no ves esto al presionar F12, la importación de abajo está fallando.
+        console.log("🟢 host.html: Inicializando script...");
+
+        import { renderizarPistaHielo, montarPistaHielo, desmontarPistaHielo } from './js/games/pista-hielo/host-pista-hielo.js';  
+
+        const pantallaInicio = document.getElementById('pantalla-inicio');
+const listaJugadores = document.getElementById('lobby-lista-jugadores');
+const pantallaBienvenida = document.getElementById('pantalla-bienvenida');
+const overlayFlash = document.getElementById('overlay-flash');
+const letsGoSign = document.getElementById('letsgo-sign');
+
+const audioLobby = new Audio('/sounds/musica-lobby.mp3'); 
+audioLobby.loop = true; 
+audioLobby.volume = 0.5;
+
+// LAS FUNCIONES GLOBALES PARA APAGAR/PRENDER EL LOBBY
+window.pausarLobby = () => {
+    audioLobby.pause();
+};
+
+window.reproducirLobby = () => {
+    audioLobby.play().catch(e => console.log("Esperando interacción para el lobby"));
+};
+
+const audioLetsGo = new Audio('/sounds/lets-go.mp3'); audioLetsGo.volume = 0.85;
+const audioIntro = new Audio('/sounds/super_party_intro.mp3'); audioIntro.loop = true; audioIntro.volume = 0.65;
+const audioWelcomeButton = new Audio('/sounds/welcome_button.mp3'); audioWelcomeButton.volume = 0.85;
+
+        const bienvenidaTexto = document.getElementById('bienvenida-texto');
+        let introStep = 0; 
+        let introTerminada = false;
+
+        function cerrarPantallaBienvenida() {
+            if (introTerminada) return;
+            introTerminada = true;
+            audioIntro.pause(); audioIntro.currentTime = 0;
+            pantallaBienvenida.style.transition = 'opacity 0.45s ease';
+            pantallaBienvenida.style.opacity = '0';
+            setTimeout(() => {
+                pantallaBienvenida.style.display = 'none';
+                audioLobby.play().catch(() => {});
+            }, 450);
+        }
+
+        function manejarIntroInput() {
+            if (introTerminada) return;
+            if (introStep === 0) {
+                introStep = 1;
+                audioIntro.currentTime = 0; audioIntro.play().catch(() => {});
+                bienvenidaTexto.textContent = 'Presiona cualquier botón para continuar';
+                return; // AQUÍ SE DETIENE HASTA EL SEGUNDO CLIC
+            }
+            audioWelcomeButton.currentTime = 0; audioWelcomeButton.play().catch(() => {});
+            cerrarPantallaBienvenida();
+            
+        }
+
+        document.addEventListener('keydown', manejarIntroInput);
+        document.addEventListener('click', manejarIntroInput);
+
+        const mandoURL = window.location.origin + '/mando';
+        document.getElementById('qr-inicio-url').textContent = mandoURL;
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(document.getElementById('qr-inicio'), { text: mandoURL, width: 140, height: 140, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
+        }
+
+        const socket = typeof io !== 'undefined' ? io() : null;
+
+        const juegos = [{ nombre: 'Patinaje sobre Hielo', imagen: '/img/book-display.png' }];
+        let juegoIdx = 0; let cartridgeAnimating = false;
+        function actualizarSelector() {
+            document.getElementById('game-name').textContent = juegos[juegoIdx].nombre;
+            document.getElementById('cartridge-img').src = juegos[juegoIdx].imagen;
+        }
+        actualizarSelector();
+
+        function switchCartridge(dir) {
+            if (cartridgeAnimating) return;
+            cartridgeAnimating = true;
+            juegoIdx = (juegoIdx + dir + juegos.length) % juegos.length;
+            actualizarSelector();
+            setTimeout(() => { cartridgeAnimating = false; }, 200);
+        }
+        document.getElementById('btn-prev-game').onclick = () => switchCartridge(-1);
+        document.getElementById('btn-next-game').onclick = () => switchCartridge(1);
+
+        const btnVolOn = document.getElementById('btn-vol-off');
+        const btnVolOff = document.getElementById('btn-vol-on');
+        const volSliderLobby = document.getElementById('vol-slider-lobby');
+        let lobbyMuted = false; let lobbyVolPrev = 0.5;
+
+        function setLobbyMute(muted) {
+            lobbyMuted = muted;
+            if (muted) { lobbyVolPrev = audioLobby.volume || 0.5; audioLobby.volume = 0; volSliderLobby.value = 0; } 
+            else { audioLobby.volume = lobbyVolPrev; volSliderLobby.value = lobbyVolPrev; }
+        }
+        btnVolOn.onclick = () => setLobbyMute(true);
+        btnVolOff.onclick = () => setLobbyMute(false);
+        volSliderLobby.addEventListener('input', () => {
+            audioLobby.volume = parseFloat(volSliderLobby.value);
+            if (audioLobby.volume === 0 !== lobbyMuted) { lobbyMuted = (audioLobby.volume === 0); }
+        });
+
+        document.getElementById("btn-iniciar").onclick = (e) => {
+            e.preventDefault(); 
+            const cartImg = document.getElementById("cartridge-img");
+            cartImg.classList.remove("glowing"); void cartImg.offsetWidth; cartImg.classList.add("glowing");
+            audioLetsGo.currentTime = 0; audioLetsGo.play().catch(() => {});
+            overlayFlash.style.opacity = "1"; overlayFlash.style.pointerEvents = "all";
+
+            setTimeout(() => {
+                document.getElementById('pantalla-inicio').style.display = 'none'; 
+                document.getElementById('contenedor-pista-hielo').style.display = 'flex';
+                montarPistaHielo(socket); // <--- Llama a la función para que inyecte el HTML
+                socket?.emit("host-iniciar-juego", "pista-hielo");
+            }, 700);
+
+            setTimeout(() => {
+                overlayFlash.style.transition = "opacity 0.5s ease-out"; overlayFlash.style.opacity = "0";
+                if (typeof letsGoSign !== 'undefined') letsGoSign.classList.remove("visible");
+                setTimeout(() => { overlayFlash.style.transition = "opacity 0.35s ease-in"; overlayFlash.style.pointerEvents = "none"; }, 520);
+            }, 1100);
+        };
+
+        const lobbyContenedor = document.getElementById('lobby-personajes');
+const LOBBY_W = 1000; 
+const lobbyEls = {};
+
+if (socket) {
+    // --- EVENTO: ESTADO DEL LOBBY ---
+    socket.on('estado_lobby', (posiciones) => {
+        // Actualizar lista de nombres
+        if (typeof listaJugadores !== 'undefined' && listaJugadores) {
+            listaJugadores.innerHTML = '';
+            for (const id in posiciones) {
+                const row = document.createElement('div'); 
+                row.className = 'fila-jugador';
+                row.innerHTML = `<span class="jug-nombre">${posiciones[id].nombre}</span>`;
+                listaJugadores.appendChild(row);
+            }
+        }
+
+        const seen = new Set();
+        for (const id in posiciones) {
+            const l = posiciones[id]; 
+            seen.add(id);
+            const moving = Math.abs(l.vx) > 0.4; 
+            const estado = (l.saltando || moving) ? 'caminando' : 'idle';
+            
+            if (!lobbyEls[id]) {
+                const wrap = document.createElement('div'); 
+                wrap.className = 'lobby-jugador-wrap';
+                const label = document.createElement('div'); 
+                label.className = 'lobby-etiqueta';
+                const sprite = document.createElement('div');
+                sprite.id = `sprite-${id}`;
+                wrap.appendChild(label); 
+                wrap.appendChild(sprite); 
+                lobbyContenedor.appendChild(wrap);
+                lobbyEls[id] = { wrap, sprite, label, ultimoPersonaje: '' };
+            }
+            
+            const { wrap, sprite, label } = lobbyEls[id];
+            label.textContent = l.nombre;
+            
+            if (lobbyEls[id].ultimoPersonaje !== l.color) {
+                lobbyEls[id].ultimoPersonaje = l.color; 
+                sprite.className = 'sprite-personaje lobby-sprite';
+                sprite.style.backgroundImage = `url('/img/${l.color}.png')`;
+            }
+
+            // POSICIONAMIENTO RESPONSIVO (Sin muros invisibles)
+            const xPct = (l.x / LOBBY_W) * 100;
+            const saltoReal = l.jumpHeight || 0;
+            const jumpPx = Math.round(saltoReal * 0.85);
+
+            wrap.style.left = xPct + '%';
+            wrap.style.bottom = `calc(0vh + ${jumpPx}px)`; // cambiar distancia del suelo
+            wrap.style.top = 'auto'; 
+            wrap.style.transform = 'translate(-50%, 0)';
+
+            const baseClasses = sprite.className.split(' ').filter(c => !['idle', 'caminando'].includes(c)).join(' ');
+            sprite.className = baseClasses + ' ' + estado;
+            sprite.style.setProperty('--flip', l.vx >= 0 ? -1 : 1);
+        }
+
+        // Limpieza de desconectados
+        for (const id in lobbyEls) {
+            if (!seen.has(id)) { 
+                lobbyEls[id].wrap.remove(); 
+                delete lobbyEls[id]; 
+            }
+        }
+    });
+
+
+    // --- ESCUCHA ACTIVA DEL JUEGO ---
+    socket.on('estado-pista-hielo', (data) => {
+            // Este evento se recibe muchas veces por segundo desde el servidor
+            // data contiene: { jugadores: [], moneda: {}, tiempo: 120 }
+            
+            const contenedor = document.getElementById('contenedor-pista-hielo');
+            
+            // Solo renderizamos si el juego está visible en pantalla
+            if (contenedor && contenedor.style.display !== 'none') {
+                renderizarPistaHielo(data.jugadores, data.moneda, data.tiempo);
+            }
+        });
+
+
+
+
+    // --- EVENTO: ANUNCIAR GANADOR ---
+    socket.on('anunciar_ganador', (msg) => {
+        const old = document.getElementById('anuncio-final');
+        if (old) old.remove();
+
+        const div = document.createElement('div');
+        div.id = "anuncio-final";
+        div.style = "position:fixed; inset:0; background:rgba(0,0,0,0.95); color:gold; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:10000;";
+        
+        div.innerHTML = `
+            <h1 style="font-size:80px; margin-bottom:20px;">${msg}</h1>
+            <button id="btn-volver-manual" style="padding:20px 50px; font-size:30px; cursor:pointer; background:white; border:none; border-radius:10px; font-weight:bold;">
+                VOLVER AL LOBBY
+            </button>
+        `;
+        document.body.appendChild(div);
+
+        document.getElementById('btn-volver-manual').onclick = () => {
+            socket.emit('solicitar_volver_lobby');
+        };
+    });
+
+    // --- EVENTO: VOLVER AL LOBBY ---
+    socket.on('volver_lobby', () => {
+        const anuncio = document.getElementById('anuncio-final');
+        if (anuncio) anuncio.remove();
+
+        desmontarPistaHielo(socket); // <--- Elimina todo el HTML y los eventos de memoria
+
+        document.getElementById('pantalla-inicio').style.display = 'flex';
+    });
+}
+    </script>
+</body>
+</html>

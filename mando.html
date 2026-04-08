@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mando Celular</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 100vh; background: #1a1a2e; font-family: sans-serif;
+            padding: 20px; overflow: hidden; touch-action: none;
+        }
+
+        /* ======= PANTALLAS ======= */
+        .pantalla { display: none; width: 100%; max-width: 340px; flex-direction: column; align-items: center; text-align: center; }
+        #pantalla-login { display: flex; background: rgba(255,255,255,0.08); padding: 25px; border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.15); }
+        #pantalla-personaje { flex-direction: column; }
+        #pantalla-control { height: 100vh; justify-content: center; gap: 15px; }
+
+        h2 { color: white; margin-bottom: 15px; }
+
+        /* ======= LOGIN ======= */
+        #qr-invitar { width: 100px; height: 100px; margin: 10px auto; background: white; border-radius: 8px; padding: 5px; }
+        #qr-invitar img { width: 100% !important; height: auto !important; }
+        #nombre-input {
+            font-size: 20px; padding: 12px; border-radius: 12px; border: 2px solid #4db6ac;
+            width: 100%; background: rgba(255,255,255,0.1); color: white; margin-bottom: 15px; outline: none;
+        }
+        .btn-principal {
+            font-size: 18px; padding: 12px; border-radius: 12px; border: 2px solid white;
+            background: #4db6ac; color: white; cursor: pointer; font-weight: bold; width: 100%;
+        }
+
+        /* ======= SELECTOR ======= */
+        .selector-container { display: flex; align-items: center; gap: 15px; margin: 20px 0; }
+        .flecha-nav { width: 50px; height: 50px; cursor: pointer; }
+        #visor-personaje { width: 150px; height: 150px; border: 3px solid #4db6ac; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); }
+        #img-personaje-actual { width: 110px; height: 110px; object-fit: contain; }
+
+        /* ======= JOYSTICK ======= */
+        #joystick-base { width: 200px; height: 200px; background: rgba(255,255,255,0.1); border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; position: relative; }
+        #joystick-knob { width: 80px; height: 80px; background: white; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
+        #ctrl-personaje-img { width: 70px; height: 70px; filter: drop-shadow(0 0 10px #4db6ac); }
+        #ctrl-estado { color: #ffd700; font-weight: bold; margin-top: 5px; }
+        #ctrl-hint { color: #90caf9; font-size: 13px; }
+
+        /* ======= REINICIO ======= */
+        #pantalla-reinicio { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla-login" class="pantalla">
+        <h2>¿Cómo te llamas?</h2>
+        <div id="qr-invitar"></div>
+        <input type="text" id="nombre-input" placeholder="Tu nombre" maxlength="10">
+        <button id="btn-siguiente" class="btn-principal">Siguiente →</button>
+    </div>
+
+    <div id="pantalla-personaje" class="pantalla">
+        <h2>Elige tu personaje</h2>
+        <p id="nombre-elegido" style="color:#4db6ac; font-weight:bold;">Noctis</p>
+        <div class="selector-container">
+            <img src="img/btn_prev.png" id="btn_prev" class="flecha-nav">
+            <div id="visor-personaje">
+                <img id="img-personaje-actual" src="/img/noctis.png">
+            </div>
+            <img src="img/btn_next.png" id="btn_next" class="flecha-nav">
+        </div>
+        <button id="btn-jugar" class="btn-principal">¡A JUGAR!</button>
+    </div>
+
+    <div id="pantalla-control" class="pantalla">
+        <img id="ctrl-personaje-img" src="">
+        <p id="ctrl-estado">En el Lobby...</p>
+        <p id="ctrl-hint">Empuja arriba para saltar 🕹️</p>
+        <div id="joystick-base">
+            <div id="joystick-knob"></div>
+        </div>
+        <p style="color:gray; font-size:11px;">↑ Saltar | ← → Moverse</p>
+    </div>
+
+    <div id="pantalla-reinicio" class="pantalla">
+        <h2>Juego Terminado</h2>
+        <button id="btn-reiniciar" class="btn-principal" style="background:#ff5252;">¡JUGAR DE NUEVO!</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        const socket = io();
+        
+        // Elementos
+        const divLogin = document.getElementById('pantalla-login');
+        const divPersonaje = document.getElementById('pantalla-personaje');
+        const divControl = document.getElementById('pantalla-control');
+        const divReinicio = document.getElementById('pantalla-reinicio');
+        const knob = document.getElementById('joystick-knob');
+        const base = document.getElementById('joystick-base');
+
+        let lobbyMode = true;
+        let joyDx = 0, joyDy = 0;
+        let sendInterval = null;
+
+        // QR
+        new QRCode(document.getElementById("qr-invitar"), { text: window.location.href, width: 100, height: 100 });
+
+        // Personajes
+        const personajes = ['noctis', 'bobby', 'riot', 'torvald', 'dorian', 'glitch', 'maverick', 'virex'];
+        let idx = 0;
+
+        document.getElementById('btn_prev').onclick = () => { idx = (idx - 1 + personajes.length) % personajes.length; updateP(); };
+        document.getElementById('btn_next').onclick = () => { idx = (idx + 1) % personajes.length; updateP(); };
+        
+        function updateP() {
+            const p = personajes[idx];
+            document.getElementById('img-personaje-actual').src = `/img/${p}.png`;
+            document.getElementById('nombre-elegido').innerText = p.toUpperCase();
+        }
+
+        // Flujo
+        document.getElementById('btn-siguiente').onclick = () => {
+            if (!document.getElementById('nombre-input').value.trim()) return;
+            divLogin.style.display = 'none';
+            divPersonaje.style.display = 'flex';
+        };
+
+        document.getElementById('btn-jugar').onclick = () => {
+            const nombre = document.getElementById('nombre-input').value.trim();
+            socket.emit('unirse_al_juego', { nombre, personaje: personajes[idx] });
+            document.getElementById('ctrl-personaje-img').src = `/img/${personajes[idx]}.png`;
+            divPersonaje.style.display = 'none';
+            divControl.style.display = 'flex';
+            startLoop();
+        };
+
+// --- LÓGICA DE JOYSTICK REFORZADA ---
+let activeTouchId = null;
+
+// mando.html -> reemplaza tu función handleMove por esta:
+function handleMove(clientX, clientY) {
+    const rect = base.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    let dx = clientX - centerX;
+    let dy = clientY - centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const maxLimit = 60; 
+
+    if (dist > 0) {
+        // Limitador visual del círculo blanco
+        const visualDist = Math.min(dist, maxLimit);
+        const ratio = visualDist / dist;
+        const finalDx = dx * ratio;
+        const finalDy = dy * ratio;
+
+        // --- LÓGICA DE SENSIBILIDAD ---
+        let fuerza = visualDist / maxLimit;
+        
+        // 1. Zona muerta: Ignora movimientos menores a 6px (evita que se mueva solo)
+        if (visualDist < 6) {
+            joyDx = 0;
+            joyDy = 0;
+        } else {
+            // 2. Curva de potencia: Al elevar al cuadrado, el control es mucho más fino.
+            // Si mueves el dedo a la mitad (0.5), la velocidad enviada será solo 0.25.
+            const smoothForce = Math.pow(fuerza, 2); 
+            
+            joyDx = (finalDx / visualDist) * smoothForce;
+            joyDy = (finalDy / visualDist) * smoothForce;
+        }
+
+        // Aplicar posición visual al knob
+        knob.style.transform = `translate(calc(-50% + ${finalDx}px), calc(-50% + ${finalDy}px))`;
+    }
+}
+
+function resetJoystick() {
+    knob.style.transform = `translate(-50%, -50%)`;
+    joyDx = 0;
+    joyDy = 0;
+}
+
+// EVENTOS TÁCTILES (Móvil)
+base.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    activeTouchId = e.changedTouches[0].identifier;
+    handleMove(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+}, { passive: false });
+
+base.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === activeTouchId) {
+            handleMove(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+        }
+    }
+}, { passive: false });
+
+base.addEventListener('touchend', (e) => {
+    activeTouchId = null;
+    resetJoystick();
+});
+
+// EVENTOS MOUSE (PC)
+base.addEventListener('mousedown', (e) => {
+    const onMouseMove = (me) => handleMove(me.clientX, me.clientY);
+    const onMouseUp = () => {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+        resetJoystick();
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    handleMove(e.clientX, e.clientY);
+});
+
+// --- BUCLE DE ENVÍO ---
+function startLoop() {
+    if (sendInterval) return;
+    sendInterval = setInterval(() => {
+        const ev = lobbyMode ? 'mover_lobby' : 'mover_joystick';
+        socket.emit(ev, { dx: joyDx, dy: joyDy });
+    }, 50);
+}
+
+// --- ESCUCHA DE SOCKETS ---
+socket.on('cambiar-fase', (fase) => {
+    if (fase === 'pista-hielo') {
+        lobbyMode = false;
+        document.getElementById('ctrl-estado').innerText = "¡A PATINAR! ❄️";
+        document.getElementById('ctrl-hint').innerText = "¡Empuja a los demás!";
+    }
+});
+
+socket.on('volver_lobby', () => {
+    lobbyMode = true; // El joystick vuelve a enviar 'mover_lobby'
+    divReinicio.style.display = 'none'; // Quita el cartel de Game Over si existía
+    document.getElementById('ctrl-estado').innerText = "En el Lobby...";
+});
+
+socket.on('game_over', () => { 
+    if(typeof divReinicio !== 'undefined') divReinicio.style.display = 'flex'; 
+});
+
+document.getElementById('btn-reiniciar').onclick = () => {
+    socket.emit('reiniciar_juego');
+};
+    </script>
+</body>
+</html> 
