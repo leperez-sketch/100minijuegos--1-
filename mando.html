@@ -228,7 +228,8 @@ function startLoop() {
 }
 
 // --- ESCUCHA DE SOCKETS ---
-socket.on('cambiar-fase', (fase) => {
+socket.on('cambiar-fase', (data) => {
+    const fase = typeof data === 'string' ? data : data?.fase;
     if (fase === 'pista-hielo') {
         lobbyMode = false;
         document.getElementById('ctrl-estado').innerText = "¡A PATINAR! ❄️";

@@ -1,12 +1,12 @@
 {
-  "name": "100minijuegos-(1)",
+  "name": "100minijuegos",
   "version": "1.0.0",
-  "description": "",
+  "description": "Super Party - plataforma multijugador de minijuegos",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
+  "keywords": ["party-game", "multiplayer", "socket.io", "minigames"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
