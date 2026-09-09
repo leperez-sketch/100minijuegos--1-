@@ -10,6 +10,8 @@ efectoMoneda.volume = 0.8;
 let ultimaPosMoneda = null;
 let musicaIniciada = false;
 let memoriaDireccion = {}; // <-- LA MEMORIA PARA SABER HACIA DÓNDE MIRAN
+let elementosJugadores = {};
+let inicioCaida = {};
 
 // ==========================================
 // 1. LA QUE CONSTRUYE EL ESCENARIO Y EL CSS
@@ -22,6 +24,8 @@ export function montarPistaHielo(socket) {
     musicaIniciada = false;
     ultimaPosMoneda = null;
     memoriaDireccion = {}; // Vaciamos la memoria al iniciar
+    elementosJugadores = {};
+    inicioCaida = {};
     
     // Inyectamos el CSS y el HTML base del juego en la pantalla
     contenedor.innerHTML = `
@@ -54,6 +58,21 @@ export function montarPistaHielo(socket) {
                 position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
                 font-size: 60px; color: #00f2ff; text-shadow: 0 0 15px #00f2ff, 0 0 30px #00f2ff; z-index: 100;
                 font-family: 'HappyTreeFriends', sans-serif;
+            }
+
+            /* CAÍDA: el personaje sigue visible, gira y sale de la pantalla. */
+            .personaje {
+                transform-origin: 50% 80%;
+                will-change: transform, opacity, top;
+            }
+            .personaje-cayendo {
+                animation: personaje-caida 2s cubic-bezier(.18,.72,.32,1) forwards;
+            }
+            @keyframes personaje-caida {
+                0%   { transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scaleX(var(--direccion,1)); opacity:1; }
+                25%  { transform: translate(-50%, -50%) translate(-4px, 12px) rotate(-10deg) scaleX(var(--direccion,1)); opacity:1; }
+                55%  { transform: translate(-50%, -50%) translate(9px, 85px) rotate(28deg) scaleX(var(--direccion,1)) scale(.92); opacity:.95; }
+                100% { transform: translate(-50%, -50%) translate(22px, 360px) rotate(105deg) scaleX(var(--direccion,1)) scale(.55); opacity:0; }
             }
 
             /* CAPA DONDE SE MUEVEN LOS PERSONAJES */
@@ -109,56 +128,74 @@ export function renderizarPistaHielo(jugadores, moneda, tiempo) {
         timerElem.innerText = `${min}:${seg.toString().padStart(2, '0')}`;
     }
 
-    // 2. Limpiar y dibujar personajes
-    capaPersonajes.innerHTML = '';
+    // 2. Dibujar personajes sin recrear el DOM en cada tick.
+    // Esto permite que las animaciones CSS de caída tengan continuidad.
     let htmlMonedas = '<div>💰 MONEDAS</div>';
     let htmlMuertes = '<div>💀 MUERTES</div>';
+    const idsVisibles = new Set();
 
-    // Convertimos jugadores a array por si viene como objeto desde el servidor
     const listaJugadores = Array.isArray(jugadores) ? jugadores : Object.values(jugadores);
 
     listaJugadores.forEach(j => {
-        // --- 🧠 LÓGICA DE DIRECCIÓN (MEMORIA) ---
+        idsVisibles.add(j.id);
+
         if (!memoriaDireccion[j.id]) {
             memoriaDireccion[j.id] = { xAnterior: j.x, escala: 1 };
         } else {
-            // Comparamos su X actual con su X anterior
-            if (j.x > memoriaDireccion[j.id].xAnterior) {
-                memoriaDireccion[j.id].escala = -1;  // Derecha
-            } else if (j.x < memoriaDireccion[j.id].xAnterior) {
-                memoriaDireccion[j.id].escala = 1; // Izquierda
+            if (!j.cayendo) {
+                if (j.x > memoriaDireccion[j.id].xAnterior + 0.02) memoriaDireccion[j.id].escala = -1;
+                else if (j.x < memoriaDireccion[j.id].xAnterior - 0.02) memoriaDireccion[j.id].escala = 1;
             }
             memoriaDireccion[j.id].xAnterior = j.x;
         }
 
-        // --- 🎨 DIBUJAR PERSONAJE ---
-        const pElem = document.createElement('div');
-        pElem.classList.add('personaje');
+        let pElem = elementosJugadores[j.id];
+        if (!pElem) {
+            pElem = document.createElement('div');
+            pElem.className = 'personaje';
+            pElem.style.position = 'absolute';
+            pElem.style.width = '120px';
+            pElem.style.height = '120px';
+            pElem.style.backgroundSize = 'contain';
+            pElem.style.backgroundRepeat = 'no-repeat';
+            pElem.style.backgroundPosition = 'center bottom';
+            capaPersonajes.appendChild(pElem);
+            elementosJugadores[j.id] = pElem;
+        }
+
         pElem.style.left = j.x + '%';
         pElem.style.top = j.y + '%';
-        pElem.style.width = '120px';
-        pElem.style.height = '120px';
-        pElem.style.position = 'absolute';
-        pElem.style.backgroundSize = 'contain';
-        pElem.style.backgroundRepeat = 'no-repeat';
+        pElem.style.setProperty('--direccion', memoriaDireccion[j.id].escala);
 
-        // MAGIA DEL GIRO AQUÍ: combinamos el centrado con la escala de memoria
-        const direccion = memoriaDireccion[j.id].escala;
-        pElem.style.transform = `translate(-50%, -50%) scaleX(${direccion})`;
-
-        // Lógica de imagen a prueba de errores
         const lobbySprite = document.getElementById(`sprite-${j.id}`);
         if (lobbySprite && lobbySprite.style.backgroundImage !== 'none') {
             pElem.style.backgroundImage = lobbySprite.style.backgroundImage;
-        } else {
+        } else if (!pElem.style.backgroundImage) {
             pElem.style.backgroundImage = `url('/img/${j.personaje || 'cat'}-idle.gif')`;
         }
-        
-        capaPersonajes.appendChild(pElem);
 
-        // Actualizar datos de las tablas
-        htmlMonedas += `<div>${j.nombre}: ${j.monedas || j.puntos || 0}</div>`;
+        if (j.cayendo) {
+            if (!inicioCaida[j.id]) inicioCaida[j.id] = performance.now();
+            pElem.classList.add('personaje-cayendo');
+            pElem.style.setProperty('--caida-progreso', Math.min(1, (performance.now() - inicioCaida[j.id]) / 2000));
+        } else {
+            delete inicioCaida[j.id];
+            pElem.classList.remove('personaje-cayendo');
+            pElem.style.transform = `translate(-50%, -50%) scaleX(${memoriaDireccion[j.id].escala})`;
+        }
+
+        htmlMonedas += `<div>${j.nombre}: ${j.puntos || 0}</div>`;
         htmlMuertes += `<div>${j.nombre}: ${j.muertes || 0}</div>`;
+    });
+
+    // Eliminar únicamente jugadores desconectados.
+    Object.keys(elementosJugadores).forEach(id => {
+        if (!idsVisibles.has(id)) {
+            elementosJugadores[id].remove();
+            delete elementosJugadores[id];
+            delete memoriaDireccion[id];
+            delete inicioCaida[id];
+        }
     });
 
     // 3. Actualizar tablas de puntuación
@@ -195,6 +232,8 @@ export function desmontarPistaHielo(socket) {
     musicaIniciada = false;
     ultimaPosMoneda = null;
     memoriaDireccion = {}; // Limpiamos la memoria al salir
+    elementosJugadores = {};
+    inicioCaida = {};
 
     if (contenedor) {
         contenedor.innerHTML = ''; // Limpiamos la pista
