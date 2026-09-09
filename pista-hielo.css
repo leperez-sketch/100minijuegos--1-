@@ -1,0 +1,103 @@
+/* HUD Pista de Hielo */
+#hud-pista {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    font-family: 'Arial Black', sans-serif;
+}
+
+#contador-tiempo {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    color: #ff3131;
+    text-shadow: 0 0 15px rgba(255, 49, 49, 0.7);
+}
+
+#contador-monedas-lista {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    text-align: right;
+    color: #ffd700; /* Dorado */
+}
+
+#contador-muertes-lista {
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    color: #00f2ff; /* Cyan Hielo */
+}
+
+.hud-item {
+    background: rgba(0,0,0,0.5);
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 2px solid currentColor;
+    margin-bottom: 5px;
+}
+
+/* js/games/pista-hielo/pista-hielo.css */
+
+/* ... (lo que ya tenías del HUD) ... */
+
+.animacion-caida {
+    transition: transform 1.5s ease-in, opacity 1.5s !important;
+    transform: 
+        translate(-50%, -50%) 
+        scale(0) 
+        rotate(720deg) !important;
+    opacity: 0;
+    filter: blur(4px);
+}
+
+/* Efecto de brillo para la moneda */
+#moneda-pista {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #fffb00 0%, #ff9100 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 20px #ffea00;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    animation: flotarMoneda 1s infinite alternate ease-in-out;
+}
+
+@keyframes flotarMoneda {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+#plataforma-trapecio {
+    position: absolute;
+    /* Mantenemos el tamaño centrado para que se vea el fondo alrededor */
+    width: 80%; 
+    height: 60%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centrado perfecto */
+    
+    /* Tu imagen actual de la pista */
+    background-image: url('/img/hielo-pista.png');
+    background-size: 100% 100%; /* Estira la imagen para que llene el div del trapecio */
+    background-repeat: no-repeat;
+    
+    z-index: 1; /* Por encima del fondo, por debajo de los jugadores */
+}
+
+/* js/games/pista-hielo/pista-hielo.css */
+
+#capa-pista {
+    position: absolute;
+    inset: 0; /* Ocupa todo el ancho y alto */
+    overflow: hidden; /* Evita que los personajes 'cayendo' saquen barras de desplazamiento */
+    
+    /* --- TU NUEVA IMAGEN DE FONDO (Detrás de todo) --- */
+    background-image: url('/img/hielo-fondo.png'); 
+    background-size: cover; /* Hace que la imagen cubra toda la pantalla sin deformarse */
+    background-position: center;
+    z-index: 0; /* Asegura que sea la base */
+}
