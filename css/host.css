@@ -120,7 +120,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: url("img/lobby_bg.png") center center / contain no-repeat;
+            background: url("/img/lobby_bg.png") center center / cover no-repeat;
         }
 
         #campo-de-juego {
@@ -354,29 +354,113 @@
         .sprite-personaje.patinando { animation: patinar 0.15s ease-in-out infinite; filter: drop-shadow(0 0 8px #00e5ff); }
 
 
-/* Responsive 16:9 baseline: designed around 1920x1080. */
+/* ===== RESPONSIVE 16:9 — REFERENCIA 1920×1080 =====
+   La interfaz usa 1920×1080 como lienzo de diseño. En ultrawide no crece sin límite.
+*/
 html, body { width:100%; height:100%; overflow:hidden; }
-#pantalla-inicio { width:100vw; height:100vh; background-size:cover; background-position:center; }
-#titulo-lobby { width:clamp(420px,39.58vw,760px); max-width:39.58vw; top:clamp(12px,1.67vh,18px); }
-#lobby-layout { width:min(100vw,1920px); max-width:1920px; grid-template-columns:clamp(220px,13.55vw,260px) minmax(650px,1fr) clamp(220px,13.55vw,260px); gap:clamp(20px,2.08vw,40px); padding:clamp(18px,2.59vh,28px) clamp(24px,2.71vw,52px) clamp(12px,1.67vh,18px); }
-#lobby-left,#lobby-right { min-width:0; max-width:none; padding-top:clamp(70px,11.11vh,120px); }
-#lobby-left { left:clamp(-40px,-2.08vw,-20px); top:clamp(-80px,-7.41vh,-40px); }
-#lobby-right { left:clamp(20px,2.08vw,40px); top:clamp(-140px,-12.96vh,-70px); }
-#lobby-qr-title,#lobby-players-title { font-size:clamp(18px,1.25vw,24px); }
-.fila-jugador { font-size:clamp(18px,1.35vw,26px)!important; padding:clamp(8px,.63vw,12px) clamp(12px,1.04vw,20px)!important; margin-bottom:clamp(6px,.52vw,10px)!important; }
-#lobby-center { transform:translate(clamp(-90px,-4.69vw,-35px),clamp(80px,13.89vh,150px)); min-width:0; }
-#game-selector { grid-template-columns:clamp(70px,4.79vw,92px) minmax(0,1fr) clamp(70px,4.79vw,92px); gap:clamp(10px,1.25vw,24px); max-width:760px; }
-#btn-prev-game,#btn-next-game { width:clamp(90px,7.81vw,150px); height:clamp(90px,7.81vw,150px); }
-#btn-prev-game img,#btn-next-game img { width:clamp(90px,7.81vw,150px); }
-#cartridge-display { width:min(650px,33.85vw); height:auto; aspect-ratio:650/488; }
+
+#pantalla-inicio {
+    width:100vw;
+    height:100vh;
+    min-height:0;
+    background: url('/img/lobby_bg.png') center center / cover no-repeat;
+}
+
+#titulo-lobby {
+    width: clamp(420px, 33.85vw, 650px);
+    max-width: 34vw;
+    top: clamp(10px, 1.4vh, 15px);
+}
+
+#lobby-layout {
+    width: min(100vw, 1920px);
+    max-width: 1920px;
+    grid-template-columns: clamp(210px, 13vw, 250px) minmax(560px, 1fr) clamp(210px, 13vw, 250px);
+    gap: clamp(16px, 1.6vw, 30px);
+    padding: clamp(16px, 2.2vh, 24px) clamp(24px, 2.5vw, 48px) 14px;
+}
+
+#lobby-left, #lobby-right {
+    min-width:0;
+    max-width:none;
+    padding-top: clamp(78px, 9.3vh, 100px);
+}
+
+#lobby-left { left: clamp(-24px, -1.25vw, -12px); top: clamp(-55px, -5vh, -25px); }
+#lobby-right { left: clamp(12px, 1.25vw, 24px); top: clamp(-85px, -7.4vh, -40px); }
+
+#lobby-qr-title, #lobby-players-title { font-size: clamp(18px, 1.15vw, 22px); }
+.fila-jugador {
+    font-size: clamp(17px, 1.15vw, 22px) !important;
+    padding: clamp(7px, .55vw, 10px) clamp(10px, .85vw, 16px) !important;
+    margin-bottom: clamp(5px, .45vw, 8px) !important;
+}
+
+#lobby-center {
+    transform: translate(clamp(-35px, -1.3vw, -12px), clamp(62px, 8.5vh, 92px));
+    min-width:0;
+}
+
+#game-selector {
+    grid-template-columns: clamp(68px, 5vw, 100px) minmax(0, 1fr) clamp(68px, 5vw, 100px);
+    gap: clamp(8px, 1vw, 18px);
+    max-width: 700px;
+}
+
+#btn-prev-game, #btn-next-game {
+    width: clamp(78px, 6vw, 115px);
+    height: clamp(78px, 6vw, 115px);
+}
+#btn-prev-game img, #btn-next-game img { width: clamp(78px, 6vw, 115px); }
+
+#cartridge-display {
+    width: min(560px, 29vw);
+    height: auto;
+    aspect-ratio: 650 / 488;
+}
 #cartridge-img { width:100%; height:100%; }
-#game-name { margin-top:clamp(18px,1.77vh,34px); margin-bottom:clamp(14px,1.35vh,26px); left:clamp(0px,4.17vw,80px); top:clamp(-90px,-8.33vh,-45px); padding:clamp(8px,.73vw,14px) clamp(16px,1.46vw,28px); font-size:clamp(32px,3.33vw,64px); }
-#btn-iniciar { left:clamp(0px,3.13vw,60px); top:clamp(-100px,-9.26vh,-50px); }
-#btn-iniciar img { width:clamp(220px,18.23vw,350px); }
+
+#game-name {
+    margin-top: clamp(12px, 1.3vh, 20px);
+    margin-bottom: clamp(10px, 1.1vh, 18px);
+    left: clamp(0px, 2.5vw, 48px);
+    top: clamp(-55px, -4.6vh, -28px);
+    padding: clamp(7px, .6vw, 12px) clamp(12px, 1.2vw, 22px);
+    font-size: clamp(30px, 2.5vw, 48px);
+}
+
+#btn-iniciar {
+    left: clamp(0px, 2vw, 38px);
+    top: clamp(-65px, -5.6vh, -34px);
+}
+#btn-iniciar img { width: clamp(210px, 15.6vw, 300px); }
+
 #letsgo-sign img { width:min(680px,60vw); }
-.lobby-jugador-wrap { width:clamp(150px,10.42vw,200px); height:clamp(150px,10.42vw,200px); }
-.lobby-sprite,.lobby-sprite.hada-sprite,.lobby-sprite.samurai-sprite,.lobby-sprite.mecanico-sprite { width:clamp(180px,13.02vw,250px)!important; height:clamp(180px,13.02vw,250px)!important; }
-.lobby-etiqueta { font-size:clamp(16px,1.15vw,22px); padding:clamp(5px,.42vw,8px) clamp(10px,.94vw,18px); }
-@media (max-width:1280px),(max-height:720px) { #lobby-layout { grid-template-columns:180px minmax(480px,1fr) 180px; gap:12px; padding-left:18px; padding-right:18px; } #lobby-left,#lobby-right { transform:scale(.82); } }
+
+.lobby-jugador-wrap {
+    width:clamp(140px, 9.4vw, 180px);
+    height:clamp(140px, 9.4vw, 180px);
+}
+.lobby-sprite,
+.lobby-sprite.hada-sprite,
+.lobby-sprite.samurai-sprite,
+.lobby-sprite.mecanico-sprite {
+    width:clamp(170px, 11.5vw, 220px) !important;
+    height:clamp(170px, 11.5vw, 220px) !important;
+}
+.lobby-etiqueta {
+    font-size:clamp(15px, 1vw, 20px);
+    padding:clamp(4px, .35vw, 7px) clamp(8px, .8vw, 15px);
+}
+
+@media (max-width: 1280px), (max-height: 720px) {
+    #lobby-layout {
+        grid-template-columns: 170px minmax(430px, 1fr) 170px;
+        gap: 10px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+    #lobby-left, #lobby-right { transform:scale(.84); }
+}
 
 #contenedor-pista-hielo { display:none; position:fixed; inset:0; z-index:500; }
