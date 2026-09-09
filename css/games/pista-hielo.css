@@ -81,7 +81,7 @@
     transform: translate(-50%, -50%); /* Centrado perfecto */
     
     /* Tu imagen actual de la pista */
-    background-image: url('img/hielo-pista.png');
+    background-image: url('/img/hielo-pista.png');
     background-size: 100% 100%; /* Estira la imagen para que llene el div del trapecio */
     background-repeat: no-repeat;
     
@@ -96,7 +96,7 @@
     overflow: hidden; /* Evita que los personajes 'cayendo' saquen barras de desplazamiento */
     
     /* --- TU NUEVA IMAGEN DE FONDO (Detrás de todo) --- */
-    background-image: url('img/hielo-fondo.png'); 
+    background-image: url('/img/hielo-fondo.png'); 
     background-size: cover; /* Hace que la imagen cubra toda la pantalla sin deformarse */
     background-position: center;
     z-index: 0; /* Asegura que sea la base */
