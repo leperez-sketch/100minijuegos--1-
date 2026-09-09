@@ -3,12 +3,12 @@ module.exports = {
     limites: { yMin: 36, yMax: 73, xTop: 28, xBottom: 10 },
     tiempoS: 120,
     // 2. CENTRAMOS LA MONEDA INICIAL EN LA NUEVA PISTA
-    moneda: { x: 50, y: 65, activa: true },
+    moneda: { x: 50, y: 65, activa: true, id: 0 },
     terminado: false,
 
     iniciar(jugadores) {
         this.tiempoS = 120;
-        this.moneda = { x: 50, y: 65, activa: true };
+        this.moneda = { x: 50, y: 65, activa: true, id: 0 };
         this.terminado = false;
         
         // 3. BAJAMOS LOS SPAWNS A LA PISTA DE HIELO REAL
@@ -143,5 +143,6 @@ module.exports = {
 
         // 4. Ponemos la moneda en un lugar seguro entre esos dos límites
         this.moneda.x = limiteIzq + Math.random() * (limiteDer - limiteIzq);
+        this.moneda.id = (this.moneda.id || 0) + 1;
     }
 };
