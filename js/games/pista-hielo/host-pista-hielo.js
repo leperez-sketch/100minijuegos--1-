@@ -12,6 +12,8 @@ let musicaIniciada = false;
 let memoriaDireccion = {}; // <-- LA MEMORIA PARA SABER HACIA DÓNDE MIRAN
 let elementosJugadores = {};
 let inicioCaida = {};
+let elementoMoneda = null;
+let ultimaMonedaRenderizada = null;
 
 // ==========================================
 // 1. LA QUE CONSTRUYE EL ESCENARIO Y EL CSS
@@ -26,6 +28,8 @@ export function montarPistaHielo(socket) {
     memoriaDireccion = {}; // Vaciamos la memoria al iniciar
     elementosJugadores = {};
     inicioCaida = {};
+    elementoMoneda = null;
+    ultimaMonedaRenderizada = null;
     
     // Inyectamos el CSS y el HTML base del juego en la pantalla
     contenedor.innerHTML = `
@@ -202,21 +206,30 @@ export function renderizarPistaHielo(jugadores, moneda, tiempo) {
     if (tablaMonedas) tablaMonedas.innerHTML = htmlMonedas;
     if (tablaMuertes) tablaMuertes.innerHTML = htmlMuertes;
 
-    // 4. Dibujar y Detectar Moneda
+    // 4. Dibujar la moneda usando UN SOLO elemento DOM.
+    // Antes se creaba un <div> nuevo en cada tick (~30 veces/segundo),
+    // acumulando cientos/miles de monedas fantasma y provocando lag.
     if (moneda && moneda.activa) {
-        // Magia del sonido: si las coordenadas cambiaron de golpe, alguien la agarró
-        if (ultimaPosMoneda && (ultimaPosMoneda.x !== moneda.x || ultimaPosMoneda.y !== moneda.y)) {
-            efectoMoneda.currentTime = 0; // Reiniciamos por si se agarran varias rápido
-            efectoMoneda.play().catch(e => {}); 
+        if (!elementoMoneda) {
+            elementoMoneda = document.createElement('div');
+            elementoMoneda.className = 'moneda-juego';
+            capaPersonajes.appendChild(elementoMoneda);
         }
-        // Grabamos la posición actual para el próximo fotograma
-        ultimaPosMoneda = { x: moneda.x, y: moneda.y };
 
-        const mElem = document.createElement('div');
-        mElem.classList.add('moneda-juego');
-        mElem.style.left = moneda.x + '%';
-        mElem.style.top = moneda.y + '%';
-        capaPersonajes.appendChild(mElem);
+        if (ultimaPosMoneda &&
+            (ultimaPosMoneda.x !== moneda.x || ultimaPosMoneda.y !== moneda.y)) {
+            efectoMoneda.currentTime = 0;
+            efectoMoneda.play().catch(e => {});
+        }
+
+        elementoMoneda.style.left = moneda.x + '%';
+        elementoMoneda.style.top = moneda.y + '%';
+        elementoMoneda.style.display = '';
+        ultimaPosMoneda = { x: moneda.x, y: moneda.y };
+        ultimaMonedaRenderizada = { x: moneda.x, y: moneda.y };
+    } else if (elementoMoneda) {
+        elementoMoneda.style.display = 'none';
+        ultimaMonedaRenderizada = null;
     }
 }
 
@@ -234,6 +247,8 @@ export function desmontarPistaHielo(socket) {
     memoriaDireccion = {}; // Limpiamos la memoria al salir
     elementosJugadores = {};
     inicioCaida = {};
+    elementoMoneda = null;
+    ultimaMonedaRenderizada = null;
 
     if (contenedor) {
         contenedor.innerHTML = ''; // Limpiamos la pista
