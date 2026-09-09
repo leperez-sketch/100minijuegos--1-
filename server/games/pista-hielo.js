@@ -19,6 +19,7 @@ module.exports = {
             j.puntos = 0;
             j.muertes = 0;
             j.cayendo = false;
+            j.caidaInicio = 0;
             j.spawnInicial = spawns[index % 4];
             this.respawn(j);
             index++;
@@ -41,6 +42,7 @@ module.exports = {
         j.y = j.spawnInicial.y;
         j.vx = 0; j.vy = 0;
         j.cayendo = false;
+        j.caidaInicio = 0;
     },
 
     actualizar(jugadores) {
@@ -113,9 +115,15 @@ module.exports = {
     },
 
     iniciarMuerte(j) {
+        if (j.cayendo) return;
         j.cayendo = true;
+        j.caidaInicio = Date.now();
+        j.vx = 0;
+        j.vy = 0;
         j.muertes++;
-        setTimeout(() => this.respawn(j), 2000); // Revive a los 2 segundos
+        setTimeout(() => {
+            if (j.cayendo) this.respawn(j);
+        }, 2000); // Revive a los 2 segundos
     },
 
     // 4. ASEGURAMOS QUE LAS NUEVAS MONEDAS APAREZCAN EN LA ZONA CORRECTA
