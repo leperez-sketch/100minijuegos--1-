@@ -1,9 +1,9 @@
 // --- SISTEMA DE AUDIO ---
-const musicaPista = new Audio('sounds/musica-pista-hielo.mp3');
+const musicaPista = new Audio('/sounds/musica-pista-hielo.mp3');
 musicaPista.loop = true; // Hacemos que la música se repita infinitamente
 musicaPista.volume = 0.4; // Ajusta entre 0.0 y 1.0 para no dejar sordos a tus amigos
 
-const efectoMoneda = new Audio('sounds/moneda.mp3');
+const efectoMoneda = new Audio('/sounds/moneda.mp3');
 efectoMoneda.volume = 0.8;
 
 // --- VARIABLES DE CONTROL MENTAL ---
@@ -175,7 +175,7 @@ export function renderizarPistaHielo(jugadores, moneda, tiempo) {
         if (lobbySprite && lobbySprite.style.backgroundImage !== 'none') {
             pElem.style.backgroundImage = lobbySprite.style.backgroundImage;
         } else if (!pElem.style.backgroundImage) {
-            pElem.style.backgroundImage = `url('/img/${j.personaje || 'cat'}-idle.gif')`;
+            pElem.style.backgroundImage = `url('/img/${j.color || j.personaje || 'noctis'}.png')`;
         }
 
         if (j.cayendo) {
