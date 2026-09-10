@@ -57,11 +57,27 @@ export function montarPistaHielo(socket) {
             #marcador-monedas { left: 30px; border: 3px solid #ffd700; background: rgba(0,0,0,0.7); color: #ffd700; }
             #marcador-muertes { right: 30px; border: 3px solid #ff4444; background: rgba(0,0,0,0.7); color: #ff4444; }
 
-            /* TEMPORIZADOR NEÓN */
+            /* TEMPORIZADOR: blanco, grande y con marco verde de alto contraste */
             #timer-pista {
-                position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-                font-size: 60px; color: #00f2ff; text-shadow: 0 0 15px #00f2ff, 0 0 30px #00f2ff; z-index: 100;
+                position: absolute;
+                top: 18px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 100;
+                min-width: 190px;
+                padding: 8px 24px 10px;
+                box-sizing: border-box;
+                text-align: center;
                 font-family: 'HappyTreeFriends', sans-serif;
+                font-size: clamp(64px, 4.2vw, 82px);
+                line-height: 0.95;
+                color: #ffffff;
+                background: rgba(5, 12, 14, 0.82);
+                border: 5px solid #39ff7a;
+                border-radius: 18px;
+                box-shadow: 0 0 10px rgba(57,255,122,.9), 0 0 26px rgba(57,255,122,.58), inset 0 0 14px rgba(57,255,122,.16);
+                text-shadow: 0 3px 5px rgba(0,0,0,.95), 0 0 7px rgba(255,255,255,.35);
+                letter-spacing: 3px;
             }
 
             /* CAÍDA: el personaje sigue visible, gira y sale de la pantalla. */

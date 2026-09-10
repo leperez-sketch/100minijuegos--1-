@@ -464,3 +464,34 @@ html, body { width:100%; height:100%; overflow:hidden; }
 }
 
 #contenedor-pista-hielo { display:none; position:fixed; inset:0; z-index:500; }
+
+
+/* QR fijo del lobby */
+#qr-inicio {
+    width: clamp(150px, 9.4vw, 180px);
+    height: clamp(150px, 9.4vw, 180px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 14px;
+    padding: 7px;
+    box-sizing: border-box;
+    box-shadow: 0 0 16px rgba(255,255,255,.28);
+}
+#qr-inicio .qr-lobby-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+}
+
+/* El spritesheet de Noctis ya contiene cada pose completa; evitamos que
+   la animación genérica de caminar altere el encuadre del frame. */
+.sprite-personaje.noctis-corriendo {
+    animation: none !important;
+    background-repeat: no-repeat !important;
+    image-rendering: auto;
+    transform: scaleX(var(--flip, 1));
+}

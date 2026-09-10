@@ -60,8 +60,10 @@ const audioWelcomeButton = new Audio('/sounds/welcome_button.mp3'); audioWelcome
 
         const mandoURL = window.location.origin + '/mando';
         document.getElementById('qr-inicio-url').textContent = mandoURL;
-        if (typeof QRCode !== 'undefined') {
-            new QRCode(document.getElementById('qr-inicio'), { text: mandoURL, width: 140, height: 140, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M });
+        const qrLobby = document.getElementById('qr-inicio');
+        if (qrLobby) {
+            // QR oficial del lobby aportado como asset. Dejamos de regenerarlo en cada carga.
+            qrLobby.innerHTML = '<img class="qr-lobby-img" src="/img/qr-lobby.png" alt="Código QR para unirse al juego">';
         }
 
         const socket = typeof io !== 'undefined' ? io() : null;
@@ -179,9 +181,27 @@ if (socket) {
             wrap.style.top = 'auto'; 
             wrap.style.transform = 'translate(-50%, 0)';
 
-            const baseClasses = sprite.className.split(' ').filter(c => !['idle', 'caminando'].includes(c)).join(' ');
-            sprite.className = baseClasses + ' ' + estado;
+            const baseClasses = sprite.className.split(' ').filter(c => !['idle', 'caminando', 'noctis-corriendo'].includes(c)).join(' ');
             sprite.style.setProperty('--flip', l.vx >= 0 ? -1 : 1);
+
+            // Noctis usa su spritesheet real al desplazarse por el lobby.
+            // El sheet es una cuadrícula 5x5 con 24 frames útiles (256x256 cada uno).
+            if (l.color === 'noctis' && moving) {
+                const frame = Math.floor(performance.now() / 70) % 24;
+                const col = frame % 5;
+                const row = Math.floor(frame / 5);
+                sprite.className = baseClasses + ' caminando noctis-corriendo';
+                sprite.style.backgroundImage = "url('/img/noctis-run.png')";
+                sprite.style.backgroundSize = '500% 500%';
+                sprite.style.backgroundPosition = `${col * 25}% ${row * 25}%`;
+            } else {
+                sprite.className = baseClasses + ' ' + estado;
+                sprite.style.backgroundSize = 'contain';
+                sprite.style.backgroundPosition = 'bottom center';
+                if (l.color === 'noctis') {
+                    sprite.style.backgroundImage = "url('/img/noctis.png')";
+                }
+            }
         }
 
         // Limpieza de desconectados
