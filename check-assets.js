@@ -4,7 +4,7 @@ const path = require('path');
 const root = __dirname;
 const files = [
   'host.html', 'mando.html',
-  'js/host/main.js', 'js/games/pista-hielo/host-pista-hielo.js',
+  'js/host/main.js', 'js/host/sprite-animation.js', 'js/games/pista-hielo/host-pista-hielo.js',
   'css/host.css', 'css/games/pista-hielo.css'
 ];
 const refs = new Set();
