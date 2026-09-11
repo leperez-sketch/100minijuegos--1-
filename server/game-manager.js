@@ -19,6 +19,7 @@ class GameManager {
       id,
       nombre: datos.nombre,
       skin: datos.skin,
+      color: datos.skin, // compatibilidad visual entre lobby y minijuegos
       puntos: 0,
       muertes: 0,
       vx: 0,

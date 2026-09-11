@@ -495,3 +495,13 @@ html, body { width:100%; height:100%; overflow:hidden; }
     image-rendering: auto;
     transform: scaleX(var(--flip, 1));
 }
+
+/* Spritesheets de carrera (Noctis/Dorian). Esta regla debe ganar al
+   background-size: contain del sprite base para mostrar UN solo frame. */
+.sprite-personaje.sprite-sheet-running {
+    background-size: 500% 500% !important;
+    background-repeat: no-repeat !important;
+    animation: none !important;
+    image-rendering: auto;
+    transform: scaleX(var(--flip, 1));
+}

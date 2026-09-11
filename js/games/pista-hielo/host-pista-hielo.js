@@ -1,7 +1,10 @@
+import { applyCharacterSprite, getCharacterSkin } from '../../host/sprite-animation.js';
+
 // --- SISTEMA DE AUDIO ---
 const musicaPista = new Audio('/sounds/musica-pista-hielo.mp3');
 musicaPista.loop = true; // Hacemos que la música se repita infinitamente
-musicaPista.volume = 0.4; // Ajusta entre 0.0 y 1.0 para no dejar sordos a tus amigos
+let volumenMusicaPista = 0.4;
+musicaPista.volume = volumenMusicaPista;
 
 const efectoMoneda = new Audio('/sounds/moneda.mp3');
 efectoMoneda.volume = 0.8;
@@ -100,18 +103,42 @@ export function montarPistaHielo(socket) {
                 position: absolute; inset: 0; z-index: 10;
             }
 
-            /* LA MONEDA AMARILLA */
+            /* MONEDA: un único elemento DOM, sin duplicación por frame. */
             .moneda-juego {
-                position: absolute; width: 40px; height: 40px;
-                background: radial-gradient(circle, #fffb00 0%, #ff9100 100%);
-                border-radius: 50%; box-shadow: 0 0 20px #ffea00;
+                position: absolute; width: 46px; height: 46px;
+                background: radial-gradient(circle at 35% 30%, #fff8a6 0 12%, #ffe436 13% 42%, #f7a600 43% 72%, #b96500 73% 100%);
+                border: 3px solid #fff048;
+                border-radius: 50%;
+                box-shadow: 0 0 10px #fff38a, 0 0 22px #ffca19;
                 transform: translate(-50%, -50%); z-index: 50;
-                animation: flotarMoneda 1s infinite alternate ease-in-out;
+                animation: flotarMoneda 0.8s infinite alternate ease-in-out;
+            }
+            .moneda-juego::after {
+                content: '★'; position: absolute; inset: 0;
+                display: grid; place-items: center;
+                color: #fff7a8; font: 900 23px/1 Arial, sans-serif;
+                text-shadow: 0 2px 0 #c67900;
             }
             @keyframes flotarMoneda {
-                from { transform: translate(-50%, -50%) scale(1); }
-                to { transform: translate(-50%, -50%) scale(1.2); }
+                from { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+                to { transform: translate(-50%, -50%) scale(1.12) rotate(5deg); }
             }
+
+            /* CONTROL DE VOLUMEN DE LA MÚSICA */
+            #volumen-pista-control {
+                position: absolute; right: 30px; bottom: 24px; z-index: 120;
+                display: flex; align-items: center; gap: 10px;
+                padding: 9px 13px;
+                border: 2px solid rgba(255,255,255,.72);
+                border-radius: 12px;
+                background: rgba(4, 12, 18, .78);
+                color: #fff;
+                font-family: 'HappyTreeFriends', sans-serif;
+                font-size: 18px;
+                box-shadow: 0 0 14px rgba(57,255,122,.22);
+            }
+            #volumen-pista-slider { width: 145px; cursor: pointer; accent-color: #39ff7a; }
+            #volumen-pista-valor { min-width: 40px; text-align: right; }
         </style>
         
         <div id="escena-juego">
@@ -119,9 +146,26 @@ export function montarPistaHielo(socket) {
             <div id="marcador-monedas" class="marcador">💰 MONEDAS</div>
             <div id="timer-pista">0:00</div>
             <div id="marcador-muertes" class="marcador">💀 MUERTES</div>
+            <div id="volumen-pista-control">
+                <span aria-hidden="true">🔊</span><span>MÚSICA</span>
+                <input id="volumen-pista-slider" type="range" min="0" max="1" step="0.05" value="0.4" aria-label="Volumen de música">
+                <span id="volumen-pista-valor">40%</span>
+            </div>
             <div id="capa-personajes"></div>
         </div>
     `;
+
+    const sliderMusica = document.getElementById('volumen-pista-slider');
+    const valorMusica = document.getElementById('volumen-pista-valor');
+    if (sliderMusica) {
+        sliderMusica.value = String(volumenMusicaPista);
+        if (valorMusica) valorMusica.textContent = `${Math.round(volumenMusicaPista * 100)}%`;
+        sliderMusica.addEventListener('input', () => {
+            volumenMusicaPista = Math.max(0, Math.min(1, Number(sliderMusica.value)));
+            musicaPista.volume = volumenMusicaPista;
+            if (valorMusica) valorMusica.textContent = `${Math.round(volumenMusicaPista * 100)}%`;
+        });
+    }
 }
 
 // ==========================================
@@ -163,8 +207,9 @@ export function renderizarPistaHielo(jugadores, moneda, tiempo) {
             memoriaDireccion[j.id] = { xAnterior: j.x, escala: 1 };
         } else {
             if (!j.cayendo) {
-                if (j.x > memoriaDireccion[j.id].xAnterior + 0.02) memoriaDireccion[j.id].escala = -1;
-                else if (j.x < memoriaDireccion[j.id].xAnterior - 0.02) memoriaDireccion[j.id].escala = 1;
+                // Los spritesheets originales miran a la derecha.
+                if (j.x > memoriaDireccion[j.id].xAnterior + 0.02) memoriaDireccion[j.id].escala = 1;
+                else if (j.x < memoriaDireccion[j.id].xAnterior - 0.02) memoriaDireccion[j.id].escala = -1;
             }
             memoriaDireccion[j.id].xAnterior = j.x;
         }
@@ -186,13 +231,16 @@ export function renderizarPistaHielo(jugadores, moneda, tiempo) {
         pElem.style.left = j.x + '%';
         pElem.style.top = j.y + '%';
         pElem.style.setProperty('--direccion', memoriaDireccion[j.id].escala);
+        pElem.style.setProperty('--flip', memoriaDireccion[j.id].escala);
 
-        const lobbySprite = document.getElementById(`sprite-${j.id}`);
-        if (lobbySprite && lobbySprite.style.backgroundImage !== 'none') {
-            pElem.style.backgroundImage = lobbySprite.style.backgroundImage;
-        } else if (!pElem.style.backgroundImage) {
-            pElem.style.backgroundImage = `url('/img/${j.color || j.personaje || 'noctis'}.png')`;
-        }
+        const skin = getCharacterSkin(j);
+        const moving = !j.cayendo && (Math.abs(j.vx || 0) > 0.04 || Math.abs(j.vy || 0) > 0.04);
+        applyCharacterSprite(pElem, {
+            skin,
+            moving,
+            facing: memoriaDireccion[j.id].escala,
+            now: performance.now()
+        });
 
         if (j.cayendo) {
             if (!inicioCaida[j.id]) inicioCaida[j.id] = performance.now();

@@ -1,7 +1,8 @@
 // CHIVATO DE CONSOLA: Si no ves esto al presionar F12, la importación de abajo está fallando.
         console.log("🟢 host.html: Inicializando script...");
 
-        import { renderizarPistaHielo, montarPistaHielo, desmontarPistaHielo } from '../games/pista-hielo/host-pista-hielo.js';  
+        import { renderizarPistaHielo, montarPistaHielo, desmontarPistaHielo } from '../games/pista-hielo/host-pista-hielo.js';
+        import { applyCharacterSprite } from './sprite-animation.js';  
 
         const pantallaInicio = document.getElementById('pantalla-inicio');
 const listaJugadores = document.getElementById('lobby-lista-jugadores');
@@ -181,27 +182,19 @@ if (socket) {
             wrap.style.top = 'auto'; 
             wrap.style.transform = 'translate(-50%, 0)';
 
-            const baseClasses = sprite.className.split(' ').filter(c => !['idle', 'caminando', 'noctis-corriendo'].includes(c)).join(' ');
-            sprite.style.setProperty('--flip', l.vx >= 0 ? -1 : 1);
+            // Dirección persistente. Los nuevos spritesheets miran a la derecha de origen:
+            // +1 al avanzar a la derecha y -1 al avanzar a la izquierda.
+            if (typeof lobbyEls[id].direccion !== 'number') lobbyEls[id].direccion = 1;
+            if (l.vx > 0.4) lobbyEls[id].direccion = 1;
+            else if (l.vx < -0.4) lobbyEls[id].direccion = -1;
 
-            // Noctis usa su spritesheet real al desplazarse por el lobby.
-            // El sheet es una cuadrícula 5x5 con 24 frames útiles (256x256 cada uno).
-            if (l.color === 'noctis' && moving) {
-                const frame = Math.floor(performance.now() / 70) % 24;
-                const col = frame % 5;
-                const row = Math.floor(frame / 5);
-                sprite.className = baseClasses + ' caminando noctis-corriendo';
-                sprite.style.backgroundImage = "url('/img/noctis-run.png')";
-                sprite.style.backgroundSize = '500% 500%';
-                sprite.style.backgroundPosition = `${col * 25}% ${row * 25}%`;
-            } else {
-                sprite.className = baseClasses + ' ' + estado;
-                sprite.style.backgroundSize = 'contain';
-                sprite.style.backgroundPosition = 'bottom center';
-                if (l.color === 'noctis') {
-                    sprite.style.backgroundImage = "url('/img/noctis.png')";
-                }
-            }
+            sprite.className = 'sprite-personaje lobby-sprite ' + estado;
+            applyCharacterSprite(sprite, {
+                skin: l.color,
+                moving,
+                facing: lobbyEls[id].direccion,
+                now: performance.now()
+            });
         }
 
         // Limpieza de desconectados
